@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Strings Available with their real length</h1>
+    {{range .}}
+    <h2>{{trim .}}</h2>
+    <h2>{{len .}}</h2>
+    {{end}}
+</body>
+</html>
