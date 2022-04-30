@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <form method="POST">
+        <input type="text" name="name" placeholder="Enter your name">
+        <input type="submit" name="submit-btn" value="Submit">
+    </form>
+
+    {{if .Method}}<h2>Method : {{.Method}}</h2>{{end}}
+    {{if .Host}}<h2>Host : {{.Host}}</h2>{{end}}
+    {{if .ContentLength}}<h2>Content Length : {{.ContentLength}}</h2>{{end}}
+
+    {{if .URL}}
+    <ul>
+        <li>Scheme : {{.URL.Scheme}}</li>
+        <li>Host : {{.URL.Host}}</li>
+        <li>Path : {{.URL.Path}}</li>
+        <li>Raw Path : {{.URL.RawPath}}</li>
+        <li>Raw Query : {{.URL.RawQuery}}</li>
+    </ul>
+    {{end}}
+
+    {{if .Header}}
+    {{range $key,$value := .}}
+    <h2>{{$key}}</h2>
+    <ul>{{range $value}}<li>{{.}}</li>{{end}}</ul>
+    {{end}}
+    {{end}}
+
+
+</body>
+
+</html>

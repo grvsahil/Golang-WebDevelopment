@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My car</title>
+</head>
+<body>
+    <h1>{{.Name}}</h1>
+    <h1>{{.Power}}</h1>
+    {{if .TurboEngine}}
+    <h1>Yes</h1>
+    {{end}}
+    <h1>{{.Torque}}</h1>
+    <h1>{{.PerformanceCar}}</h1>
+    <h1>{{.Name | .Brand}}</h1>
+</body>
+</html>

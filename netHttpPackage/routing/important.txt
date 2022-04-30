@@ -1,0 +1,27 @@
+1. func Handle(pattern string, handler Handler)
+
+- present in http package and takes a path string and a handler.
+- any type which has "ServeHTTP(http.ResponseWriter,*http.Request)" method implements
+- handler interface
+
+
+2. func HandleFunc(pattern string, handler func(ResponseWriter, *Request))
+
+- takes a path string and any function of type "func(ResponseWriter, *Request)" can be
+- passed directly.
+
+3. type HandlerFunc func(ResponseWriter, *Request)
+
+- its a "type" and it is used in situations when we have a function like 
+- myFunc(http.Respo
+nseWriter,*http.Request) and we want to use it as a Handler
+- The HandlerFunc type is an adapter to allow the use of ordinary functions as 
+- HTTP handlers
+
+
+4. type Handler interface {
+	 ServeHTTP(ResponseWriter, *Request)
+    }
+    
+- any type which has "ServeHTTP(http.ResponseWriter,*http.Request)" method implements
+- handler interface

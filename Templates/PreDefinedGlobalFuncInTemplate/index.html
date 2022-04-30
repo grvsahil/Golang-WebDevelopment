@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predefined functions in text/template</title>
+</head>
+<body>
+    {{range .S}}
+    <h1>{{.}}</h1>
+    {{end}}
+
+    {{$num1 := index .S 0}}
+    {{$num2 := index .S 1}}
+    {{if gt $num2 $num1}}
+    <h1>{{$num1}} >> {{$num2}}</h1>
+    {{end}}
+    
+</body>
+</html>

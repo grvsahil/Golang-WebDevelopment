@@ -1,0 +1,10 @@
+Client - Server Architecture
+Client sends request, server sends back response
+
+Handler - which handles request and response
+
+type Handler interface{
+    ServeHttp(ResponseWriter, *Request)
+}
+-Any type which has ServeHttp method implements Handler interface
+-Request is a struct
