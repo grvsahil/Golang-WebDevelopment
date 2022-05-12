@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+</head>
+<body>
+    <h2>Welcome to Pitstop</h2>
+    {{if .}}
+        <h3>User Id :- {{.Id}}</h3>
+        <h3>Name :- {{.Name}}</h3>
+        <h3>Age :- {{.Age}}</h3>
+        <h3>Organization :- {{.Organization}}</h3>
+        <h3><a href="/logout">Logout</a></h3>
+    {{else}}
+        <h3><a href="/login">Click here to login</a></h3>
+        <h3><a href="/signup">Click here to signUp</a></h3>
+    {{end}}
+</body>
+</html>

@@ -28,6 +28,7 @@ func (mT myType) ServeHTTP(rp http.ResponseWriter, rq *http.Request) {
 func main() {
 
 	var myVar myType
+
 	http.ListenAndServe(":5500", myVar)
 
 }
