@@ -5,16 +5,28 @@ import (
 	"fmt"
 	"net/http"
 	"text/template"
-	"github.com/satori/go.uuid"
-	"golang.org/x/crypto/bcrypt"
+
+	"github.com/dgrijalva/jwt-go"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
 )
 
 var (
-	tmp *template.Template
-	db  *sql.DB
-	err error
+	tmp    *template.Template
+	db     *sql.DB
+	err    error
+	jwtKey = []byte("secret_key")
 )
+
+type Credentials struct {
+	Id       string `json:"id"`
+	Password string `json:"password"`
+}
+
+type Claims struct {
+	Id string
+	jwt.StandardClaims
+}
 
 type User struct {
 	Id           string
@@ -42,129 +54,54 @@ func main() {
 	}
 	fmt.Println("Database connected")
 
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/login", loginHandler)
-	http.HandleFunc("/signup", signupHandler)
-	http.HandleFunc("/logout", logoutHandler)
-	http.ListenAndServe(":5500", nil)
+	r := mux.NewRouter()
+	r.HandleFunc("/", indexHandler).Methods("GET")
+	r.HandleFunc("/login", login).Methods("GET")
+	r.HandleFunc("/login", loginHandler).Methods("POST")
+	r.HandleFunc("/signup", signup).Methods("GET")
+	r.HandleFunc("/signup", signupHandler).Methods("POST")
+	r.HandleFunc("/logout", logoutHandler).Methods("GET")
+	r.HandleFunc("/profile", middleware(profileHandler)).Methods("GET")
+	r.HandleFunc("/greet", middleware(greet)).Methods("GET")
+	r.HandleFunc("/age", middleware(age)).Methods("GET")
+	http.ListenAndServe(":5500", r)
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	u := getUser(w, r)
-	if u.Id == "" {
-		tmp.ExecuteTemplate(w, "index.html", nil)
-	} else {
-		tmp.ExecuteTemplate(w, "index.html", u)
-	}
-}
-
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	if alreadyLoggedIn(r) {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
-
-	if r.Method == http.MethodPost {
-		id := r.FormValue("id")
-		password := r.FormValue("password")
-
-		_, err := db.Query("SELECT id FROM entries where id=?", id)
+func middleware(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("token")
 		if err != nil {
-			http.Error(w, "UserId or Password do not match", http.StatusForbidden)
+			if err == http.ErrNoCookie {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		pass, err := db.Query("SELECT password FROM entries where id=?", id)
+		tokenStr := cookie.Value
+
+		claims := &Claims{}
+
+		tkn, err := jwt.ParseWithClaims(tokenStr, claims,
+			func(t *jwt.Token) (interface{}, error) {
+				return jwtKey, nil
+			})
+
 		if err != nil {
-			http.Error(w, "UserId or Password do not match", http.StatusForbidden)
-			return
-		}
-		var passS string
-		for pass.Next() {
-			pass.Scan(&passS)
-		}
-		bcrypt.CompareHashAndPassword([]byte(passS), []byte(password))
-
-		//create session
-		sID := uuid.NewV4()
-		c := &http.Cookie{
-			Name:  "session",
-			Value: sID.String(),
-		}
-		http.SetCookie(w, c)
-
-		query := fmt.Sprintf(`INSERT INTO sessions VALUES ("%s", "%s")`, c.Value, id)
-		_, err = db.Exec(query)
-		if err != nil {
-			http.Error(w, "Internal server error", http.StatusForbidden)
-		}
-
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
-
-	tmp.ExecuteTemplate(w, "login.html", nil)
-
-}
-
-func signupHandler(w http.ResponseWriter, r *http.Request) {
-	if alreadyLoggedIn(r){
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
-
-	if r.Method == http.MethodPost {
-		id := r.FormValue("id")
-		name := r.FormValue("name")
-		age := r.FormValue("age")
-		organization := r.FormValue("organization")
-		password := r.FormValue("password")
-
-		_, err := db.Query("SELECT id FROM entries where id=?", id)
-		if err != nil {
-			http.Error(w, "UserId already taken", http.StatusForbidden)
+			if err == jwt.ErrSignatureInvalid {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		encPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-		if err != nil {
-			http.Error(w, "Internal server error", http.StatusForbidden)
+		if !tkn.Valid {
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
-		query := fmt.Sprintf(`INSERT INTO entries VALUES ("%s", "%s", "%s", "%s","%s")`, id, name, age, organization, string(encPass))
-		_, err = db.Exec(query)
-		if err != nil {
-			http.Error(w, "Internal server error", http.StatusForbidden)
-		}
-
-		fmt.Fprintln(w, "Account successfully created")
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
+		f(w, r)
 	}
-
-	tmp.ExecuteTemplate(w, "signup.html", nil)
-}
-
-func logoutHandler(w http.ResponseWriter, r *http.Request) {
-	if !alreadyLoggedIn(r){
-		http.Redirect(w,r,"/",http.StatusSeeOther)
-		return
-	}
-	c,_ := r.Cookie("session")
-
-	_, err := db.Exec("DELETE FROM sessions WHERE sessionId=?", c.Value)
-	if err != nil {
-		http.Error(w,"Internal server error",http.StatusForbidden)
-		return
-	}
-
-	c = &http.Cookie{
-		Name: "session",
-		Value: "",
-		MaxAge: -1,
-	}
-	http.SetCookie(w,c)
-
-	http.Redirect(w,r,"/",http.StatusSeeOther)
 }

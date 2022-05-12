@@ -8,15 +8,7 @@
 </head>
 <body>
     <h2>Welcome to Pitstop</h2>
-    {{if .}}
-        <h3>User Id :- {{.Id}}</h3>
-        <h3>Name :- {{.Name}}</h3>
-        <h3>Age :- {{.Age}}</h3>
-        <h3>Organization :- {{.Organization}}</h3>
-        <h3><a href="/logout">Logout</a></h3>
-    {{else}}
-        <h3><a href="/login">Click here to login</a></h3>
-        <h3><a href="/signup">Click here to signUp</a></h3>
-    {{end}}
+    <h3><a href="/login">Click here to login</a></h3>
+    <h3><a href="/signup">Click here to signUp</a></h3>
 </body>
 </html>
